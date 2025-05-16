@@ -106,6 +106,57 @@ Parameters:
 - `template` (string, optional): PDF template (default, modern, classic). Default is "default"
 - `color` (string, optional): Color theme for modern template (blue, green, red, yellow). Default is "blue"
 
+#### Set Invoice as Public
+
+```http
+POST /v1/invoices/{id}/setpublic
+```
+
+Sets an invoice as public and generates a public link for PayPal payment. This works only for invoices with PayPal payment method.
+
+This endpoint is ideal for e-commerce stores or online services where you want to allow customers to pay invoices online via PayPal.
+
+**Path Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | integer | Invoice ID |
+
+**Example Request:**
+
+```bash
+curl -X POST \
+  https://api.fakturace.site/v1/invoices/102/setpublic \
+  -H 'Authorization: Bearer YOUR_API_KEY'
+```
+
+**Example Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "invoice_id": 102,
+    "is_public": true,
+    "public_token": "7e5c8aaf3414c9b535dd62a078df408241306bf3f67b2628079e42d0e482c94",
+    "public_url": "https://api.fakturace.site/public-invoice.php?token=7e5c8aaf3414c9b535dd62a078df408241306bf3f67b2628079e42d0e482c94",
+    "payment_method": "paypal",
+    "paypal_available": true,
+    "message": "Invoice set to public successfully"
+  },
+  "error": null
+}
+```
+
+**Possible Errors:**
+
+| Code | Description |
+|------|-------------|
+| 400 | Public link is available only for invoices with PayPal payment method |
+| 400 | PayPal is not configured for this user |
+| 404 | Invoice not found |
+
+
 ### Clients
 
 #### List Clients
