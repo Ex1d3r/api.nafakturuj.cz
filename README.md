@@ -96,6 +96,97 @@ Response:
 }
 ```
 
+#### Get Invoice
+
+```http
+GET /v1/invoices/{id}
+```
+
+Retrieves detailed information about a specific invoice including public access information if the invoice is public.
+
+**Path Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | integer | Invoice ID |
+
+**Example Request:**
+
+```bash
+curl -X GET \
+  https://api.fakturace.site/v1/invoices/102 \
+  -H 'Authorization: Bearer YOUR_API_KEY'
+```
+
+**Example Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 102,
+    "invoice_number": "FAK202503-0001",
+    "invoice_type": "proforma",
+    "client": {
+      "id": 1,
+      "name": "ACME Corp",
+      "ico": "12345678",
+      "dic": "CZ12345678",
+      "address": "Testovací 123, Praha",
+      "email": "client@example.com"
+    },
+    "company": {
+      "id": 1,
+      "name": "Má Firma",
+      "ico": "87654321",
+      "dic": "CZ87654321",
+      "address": "Firemní 456, Praha",
+      "bank_account": "1234567890/0800"
+    },
+    "dates": {
+      "issue_date": "2025-05-01",
+      "due_date": "2025-05-15"
+    },
+    "payment": {
+      "method": "paypal",
+      "status": "unpaid",
+      "variabilni_symbol": "2025030001"
+    },
+    "amounts": {
+      "total_without_vat": 5000,
+      "total_vat": 1050,
+      "total_with_vat": 6050,
+      "currency": "CZK"
+    },
+    "note": "",
+    "items": [
+      {
+        "id": 144,
+        "name": "Webové služby",
+        "quantity": 1,
+        "unit_price": 5000,
+        "vat_rate": 21,
+        "total_without_vat": 5000,
+        "vat_amount": 1050,
+        "total_with_vat": 6050,
+        "currency": "CZK"
+      }
+    ],
+    "public_access": {
+      "is_public": true,
+      "public_token": "7e5c8aaf3414c9b535dd62a078df408241306bf3f67b2628079e42d0e482c94",
+      "public_url": "https://cab.fakturace.site/public-invoice?token=7e5c8aaf3414c9b535dd62a078df408241306bf3f67b2628079e42d0e482c94",
+      "return_url": "https://example.com/thank-you",
+      "paypal_available": true,
+      "payment_url": "https://www.sandbox.paypal.com/checkoutnow?token=6W971358GJ269693H"
+    }
+  },
+  "error": null
+}
+```
+
+The `public_access` field is only included when the invoice is set to public.
+
 #### Get Invoice PDF
 
 ```http
@@ -122,12 +213,20 @@ This endpoint is ideal for e-commerce stores or online services where you want t
 |-----------|------|-------------|
 | id | integer | Invoice ID |
 
+**Request Body Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| return_url | string | (Optional) URL where the customer will be redirected after successful payment |
+
 **Example Request:**
 
 ```bash
 curl -X POST \
   https://api.fakturace.site/v1/invoices/102/setpublic \
-  -H 'Authorization: Bearer YOUR_API_KEY'
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{"return_url": "https://example.com/thank-you"}'
 ```
 
 **Example Response:**
@@ -139,14 +238,20 @@ curl -X POST \
     "invoice_id": 102,
     "is_public": true,
     "public_token": "7e5c8aaf3414c9b535dd62a078df408241306bf3f67b2628079e42d0e482c94",
-    "public_url": "https://api.fakturace.site/public-invoice.php?token=7e5c8aaf3414c9b535dd62a078df408241306bf3f67b2628079e42d0e482c94",
+    "public_url": "https://cab.fakturace.site/public-invoice?token=7e5c8aaf3414c9b535dd62a078df408241306bf3f67b2628079e42d0e482c94",
+    "return_url": "https://example.com/thank-you",
     "payment_method": "paypal",
     "paypal_available": true,
+    "payment_url": "https://www.sandbox.paypal.com/checkoutnow?token=6W971358GJ269693H",
     "message": "Invoice set to public successfully"
   },
   "error": null
 }
 ```
+
+**New Features:**
+- `payment_url`: Direct link to PayPal payment page that you can use to redirect customers directly
+- `return_url`: Custom URL where the customer will be redirected after successful payment
 
 **Possible Errors:**
 
@@ -154,6 +259,7 @@ curl -X POST \
 |------|-------------|
 | 400 | Public link is available only for invoices with PayPal payment method |
 | 400 | PayPal is not configured for this user |
+| 400 | Invalid return URL format |
 | 404 | Invoice not found |
 
 
@@ -417,6 +523,86 @@ const invoiceData = {
 api.createInvoice(invoiceData)
     .then(result => console.log(result))
     .catch(error => console.error(error));
+
+// E-commerce PayPal Integration Example
+class FakturacePayPalIntegration {
+    constructor(apiKey) {
+        this.apiKey = apiKey;
+        this.baseURL = 'https://api.fakturace.site/v1';
+        this.client = axios.create({
+            baseURL: this.baseURL,
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            }
+        });
+    }
+
+    // Create an invoice with PayPal payment method
+    async createPayPalInvoice(customerData, items, returnUrl) {
+        try {
+            // 1. Create the invoice with PayPal payment method
+            const invoiceData = {
+                client_id: customerData.clientId,
+                issue_date: new Date().toISOString().split('T')[0],
+                due_date: this.getDueDate(7), // 7 days from now
+                invoice_type: "regular",
+                payment_method: "paypal", // Important: Set payment method to PayPal
+                currency: "CZK",
+                items: items
+            };
+            
+            const invoiceResult = await this.client.post('/invoices', invoiceData);
+            const invoiceId = invoiceResult.data.data.invoice_id;
+            
+            // 2. Set the invoice as public and get payment link
+            const publicResult = await this.client.post(`/invoices/${invoiceId}/setpublic`, {
+                return_url: returnUrl // URL where customer will be redirected after payment
+            });
+            
+            // 3. Return the payment info including the direct PayPal payment URL
+            return {
+                invoiceId: invoiceId,
+                invoiceNumber: invoiceResult.data.data.invoice_number,
+                paymentUrl: publicResult.data.data.payment_url, // Direct link to PayPal payment
+                publicUrl: publicResult.data.data.public_url    // Link to our invoice page
+            };
+        } catch (error) {
+            console.error('Error in PayPal integration:', error);
+            throw error;
+        }
+    }
+    
+    // Helper to calculate due date (n days from now)
+    getDueDate(days) {
+        const date = new Date();
+        date.setDate(date.getDate() + days);
+        return date.toISOString().split('T')[0];
+    }
+}
+
+// Usage example in an e-commerce checkout process
+async function processCheckout(cart, customer) {
+    const paypalIntegration = new FakturacePayPalIntegration('YOUR_API_KEY');
+    
+    // Map cart items to invoice items
+    const invoiceItems = cart.items.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        unit_price: item.price,
+        vat_rate: 21
+    }));
+    
+    // Create invoice and get payment URL
+    const paymentInfo = await paypalIntegration.createPayPalInvoice(
+        { clientId: customer.id },
+        invoiceItems,
+        'https://your-shop.com/thank-you'
+    );
+    
+    // Redirect customer to PayPal payment
+    window.location.href = paymentInfo.paymentUrl;
+}
 ```
 
 ## Error Handling
