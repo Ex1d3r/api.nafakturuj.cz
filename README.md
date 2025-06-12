@@ -1,10 +1,10 @@
-# Fakturace API Documentation
+# naFakturuj API Documentation
 
 Modern REST API for invoice management system. Create and manage invoices, clients, and more programmatically.
 
 ## Base URL
 ```
-https://api.fakturace.site/v1
+https://api.nafakturuj.cz/v1
 ```
 
 ## Authentication
@@ -114,7 +114,7 @@ Retrieves detailed information about a specific invoice including public access 
 
 ```bash
 curl -X GET \
-  https://api.fakturace.site/v1/invoices/102 \
+  https://api.nafakturuj.cz/v1/invoices/102 \
   -H 'Authorization: Bearer YOUR_API_KEY'
 ```
 
@@ -175,7 +175,7 @@ curl -X GET \
     "public_access": {
       "is_public": true,
       "public_token": "7e5c8aaf3414c9b535dd62a078df408241306bf3f67b2628079e42d0e482c94",
-      "public_url": "https://cab.fakturace.site/public-invoice?token=7e5c8aaf3414c9b535dd62a078df408241306bf3f67b2628079e42d0e482c94",
+      "public_url": "https://cab.nafakturuj.cz/public-invoice?token=7e5c8aaf3414c9b535dd62a078df408241306bf3f67b2628079e42d0e482c94",
       "return_url": "https://example.com/thank-you",
       "paypal_available": true,
       "payment_url": "https://www.sandbox.paypal.com/checkoutnow?token=6W971358GJ269693H"
@@ -223,7 +223,7 @@ This endpoint is ideal for e-commerce stores or online services where you want t
 
 ```bash
 curl -X POST \
-  https://api.fakturace.site/v1/invoices/102/setpublic \
+  https://api.nafakturuj.cz/v1/invoices/102/setpublic \
   -H 'Authorization: Bearer YOUR_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"return_url": "https://example.com/thank-you"}'
@@ -238,7 +238,7 @@ curl -X POST \
     "invoice_id": 102,
     "is_public": true,
     "public_token": "7e5c8aaf3414c9b535dd62a078df408241306bf3f67b2628079e42d0e482c94",
-    "public_url": "https://cab.fakturace.site/public-invoice?token=7e5c8aaf3414c9b535dd62a078df408241306bf3f67b2628079e42d0e482c94",
+    "public_url": "https://cab.nafakturuj.cz/public-invoice?token=7e5c8aaf3414c9b535dd62a078df408241306bf3f67b2628079e42d0e482c94",
     "return_url": "https://example.com/thank-you",
     "payment_method": "paypal",
     "paypal_available": true,
@@ -329,7 +329,7 @@ Response:
 ```php
 <?php
 $api_key = 'YOUR_API_KEY';
-$base_url = 'https://api.fakturace.site/v1';
+$base_url = 'https://api.nafakturuj.cz/v1';
 
 // List invoices
 function getInvoices($limit = 10, $offset = 0) {
@@ -375,10 +375,10 @@ function createInvoice($data) {
 ```python
 import requests
 
-class FakturaceAPI:
+class nafakturujAPI:
     def __init__(self, api_key):
         self.api_key = api_key
-        self.base_url = 'https://api.fakturace.site/v1'
+        self.base_url = 'https://api.nafakturuj.cz/v1'
         self.headers = {
             'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json'
@@ -409,7 +409,7 @@ class FakturaceAPI:
         return response.content
 
 # Usage example
-api = FakturaceAPI('YOUR_API_KEY')
+api = nafakturujAPI('YOUR_API_KEY')
 
 # List invoices
 invoices = api.get_invoices(limit=5)
@@ -441,10 +441,10 @@ print(result)
 ```javascript
 const axios = require('axios');
 
-class FakturaceAPI {
+class nafakturujAPI {
     constructor(apiKey) {
         this.apiKey = apiKey;
-        this.baseURL = 'https://api.fakturace.site/v1';
+        this.baseURL = 'https://api.nafakturuj.cz/v1';
         this.client = axios.create({
             baseURL: this.baseURL,
             headers: {
@@ -495,7 +495,7 @@ class FakturaceAPI {
 }
 
 // Usage example
-const api = new FakturaceAPI('YOUR_API_KEY');
+const api = new nafakturujAPI('YOUR_API_KEY');
 
 // List invoices
 api.getInvoices(5)
@@ -528,7 +528,7 @@ api.createInvoice(invoiceData)
 class FakturacePayPalIntegration {
     constructor(apiKey) {
         this.apiKey = apiKey;
-        this.baseURL = 'https://api.fakturace.site/v1';
+        this.baseURL = 'https://api.nafakturuj.cz/v1';
         this.client = axios.create({
             baseURL: this.baseURL,
             headers: {
